@@ -1,64 +1,85 @@
-<style>
-  body {
-    margin: 0;
-    background: #0c4a6e;
-  }
-</style>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Three.js avec fond CSS</title>
+  <style>
+    body {
+      margin: 0;
+      background: url("assets/textures/background.jpg") no-repeat center center fixed;
+      background-size: cover;
+    }
 
-<script
-  async
-  src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"
-></script>
+    button {
+      font-family: Arial, sans-serif;
+    }
+  </style>
 
-<script type="importmap">
+  <!-- Import ES Module Shims pour charger les modules ESM dans le navigateur -->
+  <script
+    async
+    src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"
+  ></script>
+
+  <!-- Importmap pour utiliser THREE depuis un CDN -->
+  <script type="importmap">
   {
     "imports": {
       "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
       "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
     }
   }
-</script>
+  </script>
+</head>
 
+<body>
 <script type="module">
-  import * as THREE from 'three'
-  import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
-  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-  const scene = new THREE.Scene()
+  // --- INITIALISATION DE LA SCENE, CAMERA, RENDERER ---
+  const scene = new THREE.Scene();
+
   const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
     0.1,
     1000
-  )
-  camera.position.set(4.61, 2.74, 8)
+  );
+  camera.position.set(4.61, 2.74, 8);
 
   const renderer = new THREE.WebGLRenderer({
     alpha: true,
     antialias: true
-  })
-  renderer.shadowMap.enabled = true
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Use softer shadows
-  renderer.setSize(window.innerWidth, window.innerHeight)
-  // Add performance optimizations
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio
-  renderer.physicallyCorrectLights = false; // Turn off physically correct lights
-  document.body.appendChild(renderer.domElement)
+  });
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  // On force la transparence du clear :
+  renderer.setClearColor(0x000000, 0);
 
-  const controls = new OrbitControls(camera, renderer.domElement)
+  // Ajout de quelques optimisations
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.physicallyCorrectLights = false;
 
+  document.body.appendChild(renderer.domElement);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+
+  // Positions caméra possibles
   const cameraPositions = {
-    farThirdPerson: {  // Default distant view
+    farThirdPerson: {
         position: new THREE.Vector3(4.61, 2.74, 8),
         target: new THREE.Vector3(0, 0, 0)
     },
-    firstPerson: {  // Inside the character
+    firstPerson: {
         position: new THREE.Vector3(0, 0.5, 0),
         target: new THREE.Vector3(0, 0.5, -1)
     },
-    closeThirdPerson: {  
-        position: new THREE.Vector3(0, 3, 4), // Closer to character, slightly higher
-        target: new THREE.Vector3(0, 0, -5) // Looking ahead of character
+    closeThirdPerson: {
+        position: new THREE.Vector3(0, 3, 4),
+        target: new THREE.Vector3(0, 0, -5)
     }
   };
 
@@ -78,9 +99,9 @@
     border-radius: 5px;
     cursor: pointer;
     z-index: 1000;
-    display: inline-block; /* Ensure buttons are inline */
-    margin-left: 10px; /* Add spacing between buttons */
-    font-size: 16px; /* Ensure consistent font size */
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 16px;
   `;
   document.body.appendChild(povButton);
 
@@ -97,28 +118,26 @@
     border-radius: 5px;
     cursor: pointer;
     z-index: 1000;
-    display: inline-block; /* Ensure buttons are inline */
-    margin-left: 10px; /* Add spacing between buttons */
-    font-size: 16px; /* Ensure consistent font size */
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 16px;
   `;
   document.body.appendChild(cycleButton);
 
   let cycleEnabled = true;
-  let frozenTime = 0; // Store the time when cycle is paused
+  let frozenTime = 0; 
 
   povButton.addEventListener('click', () => {
     const currentIndex = viewOrder.indexOf(currentView);
     const nextIndex = (currentIndex + 1) % viewOrder.length;
     currentView = viewOrder[nextIndex];
     
-    // Reset camera and controls when switching views
     if (currentView === 'farThirdPerson') {
         camera.position.copy(cameraPositions.farThirdPerson.position);
         camera.lookAt(cameraPositions.farThirdPerson.target);
-        controls.reset(); // Reset orbit controls to default
+        controls.reset(); 
     }
     
-    // Update button text with more descriptive names
     let viewName;
     switch(currentView) {
         case 'farThirdPerson':
@@ -132,10 +151,7 @@
             break;
     }
     povButton.innerHTML = `Camera: ${viewName}`;
-    
-    // Only enable orbit controls for far third person view
     controls.enabled = (currentView === 'farThirdPerson');
-    
     povButton.blur();
   });
 
@@ -145,152 +161,117 @@
     if (!cycleEnabled) {
         frozenTime = time; // Store current time when pausing
     }
-    updateCelestialBodiesVisibility(); // Call our new function
-    cycleButton.blur(); // Remove focus from button
+    updateCelestialBodiesVisibility();
+    cycleButton.blur();
   });
 
+  // --- CLASS BOX + COLLISION UTILS ---
   class Box extends THREE.Mesh {
     constructor({
       width,
       height,
       depth,
       color = '#00ff00',
-      velocity = {
-        x: 0,
-        y: 0,
-        z: 0
-      },
-      position = {
-        x: 0,
-        y: 0,
-        z: 0
-      },
+      velocity = { x: 0, y: 0, z: 0 },
+      position = { x: 0, y: 0, z: 0 },
       zAcceleration = false,
       collisionHeight
     }) {
       super(
         new THREE.BoxGeometry(width, height, depth),
         new THREE.MeshStandardMaterial({ color })
-      )
+      );
+      this.width = width;
+      this.height = height;
+      this.depth = depth;
 
-      this.width = width
-      this.height = height
-      this.depth = depth
+      this.position.set(position.x, position.y, position.z);
 
-      this.position.set(position.x, position.y, position.z)
+      this.right = this.position.x + this.width / 2;
+      this.left = this.position.x - this.width / 2;
+      this.bottom = this.position.y - this.height / 2;
+      this.top = this.position.y + this.height / 2;
+      this.front = this.position.z + this.depth / 2;
+      this.back = this.position.z - this.depth / 2;
 
-      this.right = this.position.x + this.width / 2
-      this.left = this.position.x - this.width / 2
-
-      this.bottom = this.position.y - this.height / 2
-      this.top = this.position.y + this.height / 2
-
-      this.front = this.position.z + this.depth / 2
-      this.back = this.position.z - this.depth / 2
-
-      this.velocity = velocity
-      this.gravity = -0.002
-
-      this.zAcceleration = zAcceleration
-
+      this.velocity = velocity;
+      this.gravity = -0.002;
+      this.zAcceleration = zAcceleration;
       this.canDoubleJump = true;
       this.isGrounded = false;
-      this.collisionHeight = collisionHeight ?? height
+      this.collisionHeight = collisionHeight ?? height;
     }
 
     updateSides() {
-      this.right = this.position.x + this.width / 2
-      this.left = this.position.x - this.width / 2
-
-      this.bottom = this.position.y - this.collisionHeight / 2
-      this.top = this.position.y + this.collisionHeight / 2
-
-      this.front = this.position.z + this.depth / 2
-      this.back = this.position.z - this.depth / 2
+      this.right = this.position.x + this.width / 2;
+      this.left = this.position.x - this.width / 2;
+      this.bottom = this.position.y - this.collisionHeight / 2;
+      this.top = this.position.y + this.collisionHeight / 2;
+      this.front = this.position.z + this.depth / 2;
+      this.back = this.position.z - this.depth / 2;
     }
 
     update(ground) {
-      this.updateSides()
+      this.updateSides();
 
-      // Increase acceleration for enemies (red boxes)
+      // Z acceleration
       if (this.zAcceleration) {
-        // Check if this is an enemy
-        if (this.isEnemy) { // Check for isEnemy flag instead of material color
-          this.velocity.z += 0.0009; // Tripled acceleration for enemies
+        if (this.isEnemy) {
+          // enemis plus rapides
+          this.velocity.z += 0.0009;
         } else {
-          this.velocity.z += 0.0003; // Keep original for non-enemies
+          this.velocity.z += 0.0003;
         }
       }
 
-      // Store potential new position
-      const nextX = this.position.x + this.velocity.x
-      const nextZ = this.position.z + this.velocity.z
+      const nextX = this.position.x + this.velocity.x;
+      const nextZ = this.position.z + this.velocity.z;
+      let canMoveX = true;
+      let canMoveZ = true;
 
-      // Check wall collisions before applying movement
-      let canMoveX = true
-      let canMoveZ = true
+      const originalX = this.position.x;
+      const originalZ = this.position.z;
 
-      // Update position temporarily to check collisions
-      const originalX = this.position.x
-      const originalZ = this.position.z
-
-      // Check X movement
-      this.position.x = nextX
-      this.updateSides()
-      if (boxCollision({
-        box1: this,
-        box2: walls.left.collisionWall
-      }) || 
-        boxCollision({
-          box1: this,
-          box2: walls.right.collisionWall
-        })) {
-        canMoveX = false
-        
-        // If this is an enemy, make it bounce off walls
-        if (this.material.color.getHex() === 0xff0000) { // Red color = enemy
-          this.velocity.x = -this.velocity.x * 1.5; // Bounce with increased velocity
-        }
+      // Collision sur X
+      this.position.x = nextX;
+      this.updateSides();
+      if (
+        boxCollision({ box1: this, box2: walls.left.collisionWall }) ||
+        boxCollision({ box1: this, box2: walls.right.collisionWall })
+      ) {
+        canMoveX = false;
       }
-      this.position.x = originalX
+      this.position.x = originalX;
 
-      // Check Z movement
-      this.position.z = nextZ
-      this.updateSides()
-      if (boxCollision({
-        box1: this,
-        box2: walls.front.collisionWall
-      }) || 
-        boxCollision({
-          box1: this,
-          box2: walls.back.collisionWall
-        })) {
-        canMoveZ = false
+      // Collision sur Z
+      this.position.z = nextZ;
+      this.updateSides();
+      if (
+        boxCollision({ box1: this, box2: walls.front.collisionWall }) ||
+        boxCollision({ box1: this, box2: walls.back.collisionWall })
+      ) {
+        canMoveZ = false;
       }
-      this.position.z = originalZ
+      this.position.z = originalZ;
 
-      // Apply allowed movement
-      if (canMoveX) this.position.x = nextX
-      if (canMoveZ) this.position.z = nextZ
+      // Applique le mouvement autorisé
+      if (canMoveX) this.position.x = nextX;
+      if (canMoveZ) this.position.z = nextZ;
 
-      this.updateSides()
-      this.applyGravity(ground)
+      this.updateSides();
+      this.applyGravity(ground);
     }
 
     applyGravity(ground) {
-      this.velocity.y += this.gravity
-
-      if (boxCollision({
-          box1: this,
-          box2: ground
-      })) {
-        const friction = 0.5
-        this.velocity.y *= friction
-        this.velocity.y = -this.velocity.y
+      this.velocity.y += this.gravity;
+      if (boxCollision({ box1: this, box2: ground })) {
+        const friction = 0.5;
+        this.velocity.y *= friction;
+        this.velocity.y = -this.velocity.y;
         this.isGrounded = true;
         this.canDoubleJump = true;
       } else {
-        this.position.y += this.velocity.y
+        this.position.y += this.velocity.y;
         this.isGrounded = false;
       }
     }
@@ -298,57 +279,41 @@
 
   function boxCollision({ box1, box2 }) {
     if (!box1 || !box2) return false;
-    // Ensure world matrices are up to date
     box1.updateMatrixWorld(true);
     box2.updateMatrixWorld(true);
-
     const b1 = new THREE.Box3().setFromObject(box1);
     const b2 = new THREE.Box3().setFromObject(box2);
     return b1.intersectsBox(b2);
   }
 
+  // --- SOL ET MURS ---
   const ground = new Box({
     width: 10,
     height: 0.5,
     depth: 50,
     color: '#0369a1',
-    position: {
-      x: 0,
-      y: -2,
-      z: 0
-    }
-  })
-
-  // Make ground more reflective to show colored lights better
+    position: { x: 0, y: -2, z: 0 }
+  });
   ground.material.roughness = 0.4;
   ground.material.metalness = 0.2;
-  ground.receiveShadow = true
-  scene.add(ground)
+  ground.receiveShadow = true;
+  scene.add(ground);
 
-  // Add after the ground creation
   const walls = {
     left: {
       collisionWall: new Box({
         width: 0.5,
-        height: 10, // Tall transparent wall for collision
+        height: 10,
         depth: 50,
-        color: '#ffffff', // Transparent color
-        position: {
-          x: -5.25,
-          y: 5, // Centered vertically
-          z: 0
-        }
+        color: '#ffffff',
+        position: { x: -5.25, y: 5, z: 0 }
       }),
       visualWall: new Box({
         width: 0.5,
-        height: 1.5, // Short visible wall
+        height: 1.5,
         depth: 50,
-        color: '#0369a1', // Blue color
-        position: {
-          x: -5.25,
-          y: -1, // Centered vertically
-          z: 0
-        }
+        color: '#0369a1',
+        position: { x: -5.25, y: -1, z: 0 }
       })
     },
     right: {
@@ -357,22 +322,14 @@
         height: 10,
         depth: 50,
         color: '#ffffff',
-        position: {
-          x: 5.25,
-          y: 5,
-          z: 0
-        }
+        position: { x: 5.25, y: 5, z: 0 }
       }),
       visualWall: new Box({
         width: 0.5,
         height: 1.5,
         depth: 50,
         color: '#0369a1',
-        position: {
-          x: 5.25,
-          y: -1,
-          z: 0
-        }
+        position: { x: 5.25, y: -1, z: 0 }
       })
     },
     front: {
@@ -381,22 +338,14 @@
         height: 10,
         depth: 0.5,
         color: '#ffffff',
-        position: {
-          x: 0,
-          y: 5,
-          z: 25
-        }
+        position: { x: 0, y: 5, z: 25 }
       }),
       visualWall: new Box({
         width: 10,
         height: 1.5,
         depth: 0.5,
         color: '#0369a1',
-        position: {
-          x: 0,
-          y: -1,
-          z: 25
-        }
+        position: { x: 0, y: -1, z: 25 }
       })
     },
     back: {
@@ -405,101 +354,69 @@
         height: 10,
         depth: 0.5,
         color: '#ffffff',
-        position: {
-          x: 0,
-          y: 5,
-          z: -25
-        }
+        position: { x: 0, y: 5, z: -25 }
       }),
       visualWall: new Box({
         width: 10,
         height: 1.5,
         depth: 0.5,
         color: '#0369a1',
-        position: {
-          x: 0,
-          y: -1,
-          z: -25
-        }
+        position: { x: 0, y: -1, z: -25 }
       })
     }
   };
 
-  // Add walls to the scene
   Object.values(walls).forEach(({ collisionWall, visualWall }) => {
-    collisionWall.material.visible = false; // Make collision wall invisible
+    collisionWall.material.visible = false;
     scene.add(collisionWall);
     scene.add(visualWall);
   });
 
-  // First, define the colors (after scene initialization)
+  // --- JOUR / NUIT ---
   const daySky = new THREE.Color(0x87ceeb);
   const nightSky = new THREE.Color(0x0a1931);
   const dayGround = new THREE.Color(0x0369a1);
   const nightGround = new THREE.Color(0x023761);
 
-  // Remove the existing lights
-  scene.remove(scene.children.find(child => child instanceof THREE.DirectionalLight));
-  scene.remove(scene.children.find(child => child instanceof THREE.AmbientLight));
-
-  // Create lights
-  const sunLight = new THREE.DirectionalLight(0xfff2d6, 2.5); // Increased intensity
-  const moonLight = new THREE.DirectionalLight(0xb0c4de, 0); // Changé de 0x4b6cc3 à 0xb0c4de (bleu plus clair)
+  // LUMIERES
+  const sunLight = new THREE.DirectionalLight(0xfff2d6, 2.5);
+  const moonLight = new THREE.DirectionalLight(0xb0c4de, 0);
   const ambientDay = new THREE.AmbientLight(0x404040, 0.7);
-  const ambientNight = new THREE.AmbientLight(0x1a2036, 0.25); // Réduit l'intensité de 0.3 à 0.25 et changé la couleur
+  const ambientNight = new THREE.AmbientLight(0x1a2036, 0.25);
 
-  // Change the initial positions of sun and moon to be very high up
-  sunLight.position.set(10, 50, 10); // Changed Y from 20 to 50 - much higher up
-  sunLight.shadow.camera.left = -25;
-  sunLight.shadow.camera.right = 25;
-  sunLight.shadow.camera.top = 25;
-  sunLight.shadow.camera.bottom = -25;
-  sunLight.shadow.camera.near = 1;
-  sunLight.shadow.camera.far = 50;
-  sunLight.shadow.bias = -0.0001; // Smaller bias for better shadow quality
-  sunLight.shadow.normalBias = 0.02; // Add normal bias to reduce shadow acne
-  sunLight.shadow.mapSize.width = 1024; // Reduced from 2048
-  sunLight.shadow.mapSize.height = 1024; // Reduced from 2048
-
-  // Setup shadows
+  sunLight.position.set(10, 50, 10);
   sunLight.castShadow = true;
-  moonLight.castShadow = true;
-  moonLight.shadow.mapSize.width = 1024; // Reduced from 2048
-  moonLight.shadow.mapSize.height = 1024; // Reduced from 2048
-
-  // Improve shadow settings for the sun light
-  sunLight.shadow.mapSize.width = 2048; // Increase back to 2048 for better shadow quality
+  sunLight.shadow.mapSize.width = 2048;
   sunLight.shadow.mapSize.height = 2048;
-  sunLight.shadow.bias = -0.0001; 
+  sunLight.shadow.bias = -0.0001;
   sunLight.shadow.normalBias = 0.02;
-  sunLight.shadow.camera.near = 0.1;  // Use smaller near value
-  sunLight.shadow.camera.far = 150; // Increase far plane to ensure shadows reach the entire scene
+  sunLight.shadow.camera.near = 0.1;
+  sunLight.shadow.camera.far = 150;
   sunLight.shadow.camera.left = -30;
   sunLight.shadow.camera.right = 30;
   sunLight.shadow.camera.top = 30;
   sunLight.shadow.camera.bottom = -30;
 
-  // Add a helper to visualize the light's shadow camera (optional, can be commented out in production)
-  // const shadowHelper = new THREE.CameraHelper(sunLight.shadow.camera);
-  // scene.add(shadowHelper);
+  moonLight.castShadow = true;
+  moonLight.shadow.mapSize.width = 1024;
+  moonLight.shadow.mapSize.height = 1024;
 
-  // Add lights to scene
   scene.add(sunLight, moonLight, ambientDay, ambientNight);
 
-  // Modify the sun and moon mesh creation and sizing
-  const sunGeometry = new THREE.SphereGeometry(3, 32, 32); // Made sun larger so it's still visible when far away
+  // Soleil & Lune
+  const sunGeometry = new THREE.SphereGeometry(3, 32, 32);
   const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffdd00 });
   const sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
   sunMesh.position.copy(sunLight.position);
 
-  const moonGeometry = new THREE.SphereGeometry(2, 32, 32); // Made moon larger too
+  const moonGeometry = new THREE.SphereGeometry(2, 32, 32);
   const moonMaterial = new THREE.MeshBasicMaterial({ color: 0xdddddd });
   const moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
   moonMesh.position.copy(moonLight.position);
 
   scene.add(sunMesh, moonMesh);
 
-  // Add point lights for night
+  // Lumières ponctuelles de nuit
   const nightLights = [];
   const nightLightPositions = [
       { x: -5, z: -10 },
@@ -511,101 +428,86 @@
       { x: 8, z: -15 },
       { x: 0, z: -5 }
   ];
-
   nightLightPositions.forEach(pos => {
-      const pointLight = new THREE.PointLight(0x6495ED, 0, 12); // Réduit la portée de 15 à 12
+      const pointLight = new THREE.PointLight(0x6495ED, 0, 12);
       pointLight.position.set(pos.x, 1, pos.z);
-      pointLight.decay = 2; // Ajoute une atténuation quadratique
+      pointLight.decay = 2;
       scene.add(pointLight);
       nightLights.push(pointLight);
   });
 
-  // Add moon glow
-  const moonGlow = new THREE.PointLight(0x6495ED, 0, 40); // Réduit la portée de 50 à 40
-  moonGlow.decay = 2; // Ajoute une atténuation quadratique
+  // Glow autour de la lune
+  const moonGlow = new THREE.PointLight(0x6495ED, 0, 40);
+  moonGlow.decay = 2;
   scene.add(moonGlow);
 
-  // Set initial sky and ground colors
-  scene.background = daySky.clone();
-  ground.material.color = dayGround.clone();
-
-  // Add day/night cycle variables
-  const dayLength = 20000; // 20 seconds per day
+  const dayLength = 20000;
   let time = 0;
 
-  camera.position.z = 5
-  console.log(ground.top)
+  camera.position.z = 5;
+  console.log(ground.top);
 
+  // --- CONTROLES CLAVIER ---
   const keys = {
-    a: {
-      pressed: false
-    },
-    d: {
-      pressed: false
-    },
-    s: {
-      pressed: false
-    },
-    w: {
-      pressed: false
-    }
-  }
+    a: { pressed: false },
+    d: { pressed: false },
+    s: { pressed: false },
+    w: { pressed: false }
+  };
 
-  // Modify the keydown event listener to reduce jump height
   window.addEventListener('keydown', (event) => {
     switch (event.code) {
       case 'KeyA':
-        keys.a.pressed = true
-        break
+        keys.a.pressed = true;
+        break;
       case 'KeyD':
-        keys.d.pressed = true
-        break
+        keys.d.pressed = true;
+        break;
       case 'KeyS':
-        keys.s.pressed = true
-        break
+        keys.s.pressed = true;
+        break;
       case 'KeyW':
-        keys.w.pressed = true
-        break
+        keys.w.pressed = true;
+        break;
       case 'Space':
-        if (robotModel.userData.isGrounded) {
-          robotModel.userData.velocityY = 0.1; // Reverted back to original value
-        } else if (robotModel.userData.canDoubleJump) {
-          robotModel.userData.velocityY = 0.1; // Reverted back to original value
+        if (robotModel && robotModel.userData.isGrounded) {
+          robotModel.userData.velocityY = 0.1;
+        } else if (robotModel && robotModel.userData.canDoubleJump) {
+          robotModel.userData.velocityY = 0.1;
           robotModel.userData.canDoubleJump = false;
         }
-        break
-      case 'KeyP': // Shortcut for POV button
+        break;
+      case 'KeyP':
         povButton.click();
         break;
-      case 'KeyN': // Shortcut for Day/Night Cycle button
+      case 'KeyN':
         cycleButton.click();
         break;
     }
-  })
+  });
 
   window.addEventListener('keyup', (event) => {
     switch (event.code) {
       case 'KeyA':
-        keys.a.pressed = false
-        break
+        keys.a.pressed = false;
+        break;
       case 'KeyD':
-        keys.d.pressed = false
-        break
+        keys.d.pressed = false;
+        break;
       case 'KeyS':
-        keys.s.pressed = false
-        break
+        keys.s.pressed = false;
+        break;
       case 'KeyW':
-        keys.w.pressed = false
-        break
+        keys.w.pressed = false;
+        break;
     }
-  })
+  });
 
-  const enemies = []
+  const enemies = [];
+  let frames = 0;
+  let spawnRate = 120;
 
-  let frames = 0
-  let spawnRate = 120; // Reduced from 200 to 120 for faster initial spawning
-
-  // First, add these SVG icons at the top of your script
+  // --- BOUTONS ET MENUS (POV, START, ETC.) ---
   const icons = {
       distantView: `<svg viewBox="0 0 24 24" width="24" height="24" fill="white">
           <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
@@ -618,7 +520,6 @@
       </svg>`
   };
 
-  // Create a function to generate POV buttons
   function createPOVButtons(container, callback) {
       const buttonContainer = document.createElement('div');
       buttonContainer.style.cssText = `
@@ -626,7 +527,6 @@
           gap: 10px;
           margin-bottom: 20px;
       `;
-
       const buttonStyles = `
           padding: 15px;
           background: #0ea5e9;
@@ -635,14 +535,12 @@
           cursor: pointer;
           transition: all 0.3s;
       `;
-
       ['distantView', 'firstPerson', 'closeFollow'].forEach((view, index) => {
           const button = document.createElement('button');
           button.innerHTML = icons[view];
           button.style.cssText = buttonStyles;
           button.title = view === 'distantView' ? 'Distant View' : 
                         view === 'firstPerson' ? 'First Person' : 'Close Follow';
-          
           button.addEventListener('mouseover', () => {
               button.style.background = '#0284c7';
           });
@@ -651,7 +549,6 @@
           });
           button.addEventListener('click', () => {
               callback(viewOrder[index]);
-              // Update selected button style
               buttonContainer.querySelectorAll('button').forEach(btn => {
                   btn.style.border = '2px solid transparent';
               });
@@ -659,12 +556,10 @@
           });
           buttonContainer.appendChild(button);
       });
-
       container.appendChild(buttonContainer);
       return buttonContainer;
   }
 
-  // Create game over menu
   function createGameOverMenu() {
       const gameOverMenu = document.createElement('div');
       gameOverMenu.style.cssText = `
@@ -681,7 +576,6 @@
           gap: 20px;
           z-index: 2000;
       `;
-
       const title = document.createElement('h1');
       title.textContent = 'Game Over';
       title.style.cssText = `
@@ -690,8 +584,6 @@
           font-size: 48px;
           margin-bottom: 30px;
       `;
-
-      // Add score display
       const scoreDisplay = document.createElement('p');
       scoreDisplay.textContent = `Your Score: ${score}`;
       scoreDisplay.style.cssText = `
@@ -700,7 +592,6 @@
           font-size: 24px;
           margin-bottom: 20px;
       `;
-
       const buttonStyles = `
           padding: 15px 30px;
           font-size: 18px;
@@ -711,11 +602,9 @@
           transition: background 0.3s;
           margin: 10px;
       `;
-
       const restartButton = document.createElement('button');
       restartButton.textContent = 'Restart Game';
       restartButton.style.cssText = buttonStyles + 'background: #22c55e;';
-
       const settingsButton = document.createElement('button');
       settingsButton.textContent = 'Change Settings';
       settingsButton.style.cssText = buttonStyles + 'background: #0ea5e9;';
@@ -726,7 +615,6 @@
       restartButton.addEventListener('mouseout', () => {
           restartButton.style.background = '#22c55e';
       });
-
       settingsButton.addEventListener('mouseover', () => {
           settingsButton.style.background = '#0284c7';
       });
@@ -735,16 +623,14 @@
       });
 
       gameOverMenu.appendChild(title);
-      gameOverMenu.appendChild(scoreDisplay); // Append score display
+      gameOverMenu.appendChild(scoreDisplay);
       gameOverMenu.appendChild(restartButton);
       gameOverMenu.appendChild(settingsButton);
 
-      // Button handlers
       restartButton.addEventListener('click', () => {
           resetGame();
           gameOverMenu.remove();
       });
-
       settingsButton.addEventListener('click', () => {
           gameOverMenu.remove();
           showStartMenu();
@@ -753,39 +639,34 @@
       return gameOverMenu;
   }
 
-  // Add this variable at the top level with other global variables
-  let robotCollider; // Invisible box for robot collisions
-
-  // Add this variable at the top level with other global variables
+  // --- VARIABLES GLOBALES ---
   let currentAnimationFrame = null;
-
   let robotModel;
-  let robotMixer; // Animation mixer for the robot
-  let robotActions = {}; // Store robot animations
+  let robotMixer;
+  let robotActions = {};
+  let robotCollider;
+  let isModelReady = false;
+  let gameStarted = false;
 
+  // --- CHARGE LE MODELE GLTF ---
   const loader = new GLTFLoader();
-
-  // Load the RobotExpressive model
   loader.load('./assets/models/RobotExpressive.glb', (gltf) => {
       console.log('Model loaded successfully');
       robotModel = gltf.scene;
-      robotModel.scale.set(0.3, 0.3, 0.3); // Adjust scale as needed
-      
-      // Enable shadows for all meshes in the robot
+      robotModel.scale.set(0.3, 0.3, 0.3);
       robotModel.traverse((node) => {
           if (node.isMesh) {
               node.castShadow = true;
               node.receiveShadow = true;
           }
       });
-
       robotModel.castShadow = true;
-      robotModel.position.set(0, 0, 0); // Initial position
-      robotModel.rotation.y = Math.PI; // Rotate to face forward
-      robotModel.userData = { velocityY: 0, isGrounded: false, canDoubleJump: true }; // Initialize userData
+      robotModel.position.set(0, 0, 0);
+      robotModel.rotation.y = Math.PI;
+      robotModel.userData = { velocityY: 0, isGrounded: false, canDoubleJump: true };
       scene.add(robotModel);
 
-      // Create a collision box that follows the robot
+      // Collider invisible
       const colliderSize = { width: 0.8, height: 1.8, depth: 0.8 };
       robotCollider = new Box({
           width: colliderSize.width,
@@ -794,158 +675,109 @@
           color: '#ff0000',
           position: {
               x: robotModel.position.x,
-              y: robotModel.position.y + colliderSize.height/2 - 0.2, // Adjust based on your robot's center
+              y: robotModel.position.y + colliderSize.height/2 - 0.2,
               z: robotModel.position.z
           }
       });
-      
-      // Make collider invisible but keep for collision detection
       robotCollider.material.visible = false;
       scene.add(robotCollider);
 
-      // Debug: Log animations
-      console.log('Available animations:', gltf.animations);
-
-      // Initialize animation mixer and actions
+      // Animations
       robotMixer = new THREE.AnimationMixer(robotModel);
       gltf.animations.forEach((clip) => {
           robotActions[clip.name] = robotMixer.clipAction(clip);
       });
-
-      // Debug: Log loaded actions
       console.log('Loaded robot actions:', robotActions);
-
-      // Play idle animation by default
       if (robotActions['Idle']) {
           robotActions['Idle'].play();
       } else {
-          console.warn('Idle animation not found. Available actions:', Object.keys(robotActions));
+          console.warn('Idle animation not found.');
       }
-
-      // Compute bounding boxes
       robotModel.traverse((child) => {
           if (child.isMesh) {
               child.geometry.computeBoundingBox();
           }
       });
 
-      // Start the game only after the model is loaded
       showStartMenu();
       isModelReady = true;
   }, undefined, (error) => {
       console.error('An error occurred while loading the model:', error);
   });
 
-  // Replace cube movement logic with robotModel
-  // Modify the updateRobotMovement function to increase movement speed
+  // --- MOUVEMENTS PERSONNAGE ---
   function updateRobotMovement() {
     if (!robotModel || !robotCollider) return;
-
-    // Reset velocity
     const velocity = new THREE.Vector3(0, 0, 0);
     let isMoving = false;
 
-    if (keys.a.pressed) {
-        velocity.x = -0.05; // Reverted back to original value
-        isMoving = true;
-    }
-    if (keys.d.pressed) {
-        velocity.x = 0.05; // Reverted back to original value
-        isMoving = true;
-    }
-    if (keys.s.pressed) {
-        velocity.z = 0.05; // Reverted back to original value
-        isMoving = true;
-    }
-    if (keys.w.pressed) {
-        velocity.z = -0.05; // Reverted back to original value
-        isMoving = true;
-    }
+    if (keys.a.pressed) { velocity.x = -0.05; isMoving = true; }
+    if (keys.d.pressed) { velocity.x =  0.05; isMoving = true; }
+    if (keys.s.pressed) { velocity.z =  0.05; isMoving = true; }
+    if (keys.w.pressed) { velocity.z = -0.05; isMoving = true; }
 
-    // Update collider position (always follows robot)
+    // RobotCollider suit la position du robot
     robotCollider.position.x = robotModel.position.x;
     robotCollider.position.z = robotModel.position.z;
     robotCollider.position.y = robotModel.position.y + robotCollider.height/2 - 0.2;
 
-    // Test collisions with the collider instead of robot model
     const nextX = robotCollider.position.x + velocity.x;
     const nextZ = robotCollider.position.z + velocity.z;
     let canMoveX = true, canMoveZ = true;
     const originalX = robotCollider.position.x;
     const originalZ = robotCollider.position.z;
 
-    // Check X collision
+    // Collision en X
     robotCollider.position.x = nextX;
-    robotCollider.updateSides(); // Important to update sides
-    if (boxCollision({
-        box1: robotCollider,
-        box2: walls.left.collisionWall
-    }) || 
-    boxCollision({
-        box1: robotCollider,
-        box2: walls.right.collisionWall
-    })) {
-        canMoveX = false;
+    robotCollider.updateSides();
+    if (boxCollision({ box1: robotCollider, box2: walls.left.collisionWall }) ||
+        boxCollision({ box1: robotCollider, box2: walls.right.collisionWall })) {
+      canMoveX = false;
     }
     robotCollider.position.x = originalX;
-    
-    // Check Z collision
+
+    // Collision en Z
     robotCollider.position.z = nextZ;
-    robotCollider.updateSides(); // Important to update sides
-    if (boxCollision({
-        box1: robotCollider,
-        box2: walls.front.collisionWall
-    }) || 
-    boxCollision({
-        box1: robotCollider,
-        box2: walls.back.collisionWall
-    })) {
-        canMoveZ = false;
+    robotCollider.updateSides();
+    if (boxCollision({ box1: robotCollider, box2: walls.front.collisionWall }) ||
+        boxCollision({ box1: robotCollider, box2: walls.back.collisionWall })) {
+      canMoveZ = false;
     }
     robotCollider.position.z = originalZ;
 
-    // Apply movement to robot based on collision results
     if (canMoveX) robotModel.position.x += velocity.x;
     if (canMoveZ) robotModel.position.z += velocity.z;
 
-    // Apply gravity to both robot and collider
+    // Gravité
     robotModel.userData.velocityY += -0.002;
     robotModel.position.y += robotModel.userData.velocityY;
     robotCollider.position.y += robotModel.userData.velocityY;
 
-    // Check ground collision with collider
-    if (boxCollision({
-        box1: robotCollider,
-        box2: ground
-    })) {
-        robotModel.userData.velocityY = 0;
-        // Place robot properly on ground
-        robotModel.position.y = ground.top + 0.2; // Adjust based on your robot model
-        robotModel.userData.isGrounded = true;
-        robotModel.userData.canDoubleJump = true;
+    if (boxCollision({ box1: robotCollider, box2: ground })) {
+      robotModel.userData.velocityY = 0;
+      robotModel.position.y = ground.top + 0.2;
+      robotModel.userData.isGrounded = true;
+      robotModel.userData.canDoubleJump = true;
     } else {
-        robotModel.userData.isGrounded = false;
+      robotModel.userData.isGrounded = false;
     }
 
-    // Update collider position again after all movements
     robotCollider.position.x = robotModel.position.x;
     robotCollider.position.z = robotModel.position.z;
     robotCollider.position.y = robotModel.position.y + robotCollider.height/2 - 0.2;
-    
-    // Rotate the robot if moving
+
+    // Rotation selon direction
     if (isMoving) {
-        const angle = Math.atan2(velocity.x, velocity.z);
-        robotModel.rotation.y = angle;
+      const angle = Math.atan2(velocity.x, velocity.z);
+      robotModel.rotation.y = angle;
     }
 
-    // Handle animations
+    // Animations
     if (robotMixer) {
         if (isMoving) {
             if (robotActions['Running'] && !robotActions['Running'].isRunning()) {
                 robotActions['Idle']?.stop();
                 robotActions['Running'].play();
-            } else if (!robotActions['Running']) {
-                console.warn('Running animation not found.');
             }
         } else {
             if (robotActions['Idle'] && !robotActions['Idle'].isRunning()) {
@@ -953,56 +785,37 @@
                 robotActions['Idle'].play();
             }
         }
-        robotMixer.update(0.016); // Update mixer (assuming 60 FPS)
+        // On met à jour le mixer
+        robotMixer.update(0.016);
     }
   }
 
-  // Implement enemy object pooling - add after where enemies array is declared
+  // --- POOLING DES ENNEMIS ---
   const enemyPool = [];
-  const MAX_ENEMIES = 50; // Increased from 30
-  const ENEMY_CLEANUP_DISTANCE = 30; // Reduced from 35 to clean up sooner
-  const ENEMY_STUCK_THRESHOLD = 5; // Time in seconds to consider an enemy stuck
+  const MAX_ENEMIES = 50;
+  const ENEMY_CLEANUP_DISTANCE = 30;
+  const ENEMY_STUCK_THRESHOLD = 5;
 
-  // Use better getEnemyFromPool function that tracks when enemies were created
   function getEnemyFromPool() {
-    // Reuse an existing enemy if available
     if (enemyPool.length > 0) {
       const enemy = enemyPool.pop();
-      // Reset enemy properties
-      const xPos = (Math.random() - 0.5) * 8; // Smaller x range to avoid walls
-      enemy.position.set(
-        xPos,
-        0,
-        -20
-      );
-      
-      // Increase base speed and add more variety
-      enemy.velocity.z = 0.015 + Math.random() * 0.01; // 3x faster base speed
-      
-      // Add small random X velocity to make movement more interesting
+      const xPos = (Math.random() - 0.5) * 8;
+      enemy.position.set(xPos, 0, -20);
+      enemy.velocity.z = 0.015 + Math.random() * 0.01;
       enemy.velocity.x = (Math.random() - 0.5) * 0.02;
-      
-      // Add timestamp to track when enemy was spawned
       enemy.userData.spawnTime = performance.now();
-      enemy.userData.lastZPosition = -20; // Track last position to detect if stuck
-      enemy.userData.stuckTime = 0; // Track how long the enemy has been stuck
-      
-      enemy.isEnemy = true; // Make sure recycled enemies have the flag set
+      enemy.userData.lastZPosition = -20;
+      enemy.userData.stuckTime = 0;
+      enemy.isEnemy = true;
       enemy.visible = true;
       scene.add(enemy);
       return enemy;
     }
-    
-    // Create a new enemy if needed
-    const xPos = (Math.random() - 0.5) * 8; // Smaller x range to avoid walls
-
-    // Create shader uniforms for the enemy
+    const xPos = (Math.random() - 0.5) * 8;
     const shaderUniforms = {
       time: { value: 0 },
       glow: { value: 0.6 }
     };
-
-    // Create the enemy with shader material
     const enemy = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1, 1),
       new THREE.ShaderMaterial({
@@ -1013,13 +826,10 @@
         side: THREE.DoubleSide
       })
     );
-
     enemy.castShadow = true;
-    enemy.receiveShadow = false; // Don't receive shadows with custom shader
+    enemy.receiveShadow = false;
     enemy.position.set(xPos, 0, -20);
-    enemy.isEnemy = true; // Add this flag to identify enemies
-    
-    // Add equivalent Box properties to the mesh
+    enemy.isEnemy = true;
     enemy.width = 1;
     enemy.height = 1;
     enemy.depth = 1;
@@ -1033,41 +843,27 @@
     enemy.updateSides = Box.prototype.updateSides;
     enemy.applyGravity = Box.prototype.applyGravity;
     enemy.update = Box.prototype.update;
-    
-    // Store reference to shader uniforms for animation
     enemy.shaderUniforms = shaderUniforms;
-    
-    // Add timestamp to track when enemy was spawned
     enemy.userData.spawnTime = performance.now();
     enemy.userData.lastZPosition = -20;
     enemy.userData.stuckTime = 0;
-    
     scene.add(enemy);
     return enemy;
   }
 
-  // Improved cleanupEnemies function that also removes stuck enemies
   function cleanupEnemies() {
     const currentTime = performance.now();
-    
     for (let i = enemies.length - 1; i >= 0; i--) {
       const enemy = enemies[i];
-      
-      // Check if enemy has passed the cleanup distance
       if (enemy.position.z > ENEMY_CLEANUP_DISTANCE || enemy.position.y < -10) {
-        // Remove from scene and add to pool
         scene.remove(enemy);
         enemy.visible = false;
         enemyPool.push(enemy);
         enemies.splice(i, 1);
         continue;
       }
-      
-      // Check if enemy is stuck
       if (Math.abs(enemy.position.z - enemy.userData.lastZPosition) < 0.01) {
-        enemy.userData.stuckTime += 1/60; // Assuming 60fps
-        
-        // If stuck for too long, remove it
+        enemy.userData.stuckTime += 1/60;
         if (enemy.userData.stuckTime > ENEMY_STUCK_THRESHOLD) {
           scene.remove(enemy);
           enemy.visible = false;
@@ -1076,12 +872,9 @@
           continue;
         }
       } else {
-        // Enemy is moving, reset stuck counter
         enemy.userData.stuckTime = 0;
         enemy.userData.lastZPosition = enemy.position.z;
       }
-      
-      // If enemy has been alive for too long (30 seconds), remove it regardless
       const lifespan = (currentTime - enemy.userData.spawnTime) / 1000;
       if (lifespan > 30) {
         scene.remove(enemy);
@@ -1092,194 +885,122 @@
     }
   }
 
-  // Modify the animate function to improve performance
+  // --- BOUCLE D'ANIMATION ---
   function animate() {
     currentAnimationFrame = requestAnimationFrame(animate);
-
-    // Handle movement first
     if (gameStarted) {
         updateRobotMovement();
     }
-
-    // Update the game - optimization: only run game logic when active
     if (gameStarted) {
       updateRobotMovement();
-
-      // Cleanup enemies that are too far away to improve performance
       cleanupEnemies();
-
-      // Enemy collision check with performance optimizations
       for (let i = 0; i < enemies.length; i++) {
         const enemy = enemies[i];
-        enemy.update(ground); // Make sure enemy movement is processed every frame
-        
-        // Only do collision check if enemy is near the player (optimization)
+        enemy.update(ground);
         if (Math.abs(enemy.position.z - robotModel.position.z) < 5) {
-          if (boxCollision({
-            box1: robotCollider,
-            box2: enemy
-          })) {
+          if (boxCollision({ box1: robotCollider, box2: enemy })) {
             gameStarted = false;
-            stopScoreCounter(); // Stop the score counter
+            stopScoreCounter();
             cancelAnimationFrame(currentAnimationFrame);
             document.body.appendChild(createGameOverMenu());
             return;
           }
         }
       }
-
-      // Spawning enemies, modified to use object pooling
       if (frames % spawnRate === 0 && enemies.length < MAX_ENEMIES) {
-        // Decrease spawn rate faster (by 10 instead of 5) and to a lower minimum (40 instead of 60)
         if (spawnRate > 40) spawnRate -= 10;
-        
         const newEnemy = getEnemyFromPool();
-        if (newEnemy) {
-          enemies.push(newEnemy);
-        }
-        
-        // Spawn multiple enemies at once for higher difficulty
+        if (newEnemy) enemies.push(newEnemy);
         if (spawnRate < 80 && Math.random() > 0.5) {
-          // 50% chance to spawn a second enemy when spawn rate is low
           const extraEnemy = getEnemyFromPool();
-          if (extraEnemy) {
-            enemies.push(extraEnemy);
-          }
+          if (extraEnemy) enemies.push(extraEnemy);
         }
       }
-
       frames++;
-      
-      // Optimization: update day/night cycle at lower frequency
       if (cycleEnabled) {
         time += 16;
-        
-        // Only update lighting every few frames
         if (frames % 2 === 0) {
           updateDayNightCycle();
         }
       }
     }
-
-    // Update camera position - this still needs to run every frame
     updateCameraPosition();
-    
-    // Render the scene
     renderer.render(scene, camera);
-  }
 
-  // Extract day/night cycle logic to separate function for better organization
-  function updateDayNightCycle() {
-    if (!cycleEnabled) return; // Skip updates when cycle is disabled
-    
-    const dayTime = (time % dayLength) / dayLength;
-    const angle = dayTime * Math.PI * 2;
-    
-    // Update sun position and intensity
-    const orbitRadius = 40; // Increased from 30
-    const heightOffset = 50; // Significantly increased from 15
-    
-    // Update sun position to be higher in the scene
-    sunLight.position.x = Math.cos(angle) * orbitRadius;
-    sunLight.position.y = Math.sin(angle) * orbitRadius / 2 + heightOffset; // Modified equation to keep sun higher
-    sunLight.position.z = Math.sin(angle) * (orbitRadius / 2);
-    sunMesh.position.copy(sunLight.position);
-    
-    // Update light intensities
-    const sunIntensity = Math.max(0, Math.sin(angle));
-    const moonIntensity = Math.max(0, -Math.sin(angle));
-    
-    sunLight.intensity = sunIntensity * 2.5;
-    moonLight.intensity = moonIntensity * 1.2; // Réduit l'intensité max de 1.5 à 1.2
-    
-    // Update moon position
-    moonLight.position.x = Math.cos(angle + Math.PI) * orbitRadius;
-    moonLight.position.y = Math.sin(angle + Math.PI) * orbitRadius / 2 + heightOffset;
-    moonLight.position.z = Math.sin(angle + Math.PI) * (orbitRadius / 2);
-    moonMesh.position.copy(moonLight.position);
-    moonGlow.position.copy(moonLight.position);
-    
-    // Modifier l'intensité des lumières nocturnes
-    // Update night point lights - use a more subtle logarithmic curve
-    for (let i = 0; i < nightLights.length; i++) {
-      // Utilise moins de lumières, avec une intensité plus progressive
-      if (i < nightLights.length / 2) {
-        nightLights[i].intensity = Math.log(moonIntensity * 9 + 1) * 0.8; // Courbe logarithmique plus douce
-      } else {
-        // Désactive certaines lumières pour réduire les effets bizarres
-        nightLights[i].intensity = 0;
-      }
-    }
-    
-    // Réduire l'intensité du moonGlow
-    moonGlow.intensity = moonIntensity * 1.5; // Réduit de 3.0 à 1.5
-    
-    // Update sky and ground colors
-    scene.background.copy(daySky).lerp(nightSky, moonIntensity);
-    ground.material.color.copy(dayGround).lerp(nightGround, moonIntensity);
-    
-    // Update enemy emissiveness and lights
+    // On met à jour le shader time
     for (let i = 0; i < enemies.length; i++) {
       const enemy = enemies[i];
-      if (enemy.material) {
-        // Adjust emissive intensity based on time of day
-        enemy.material.emissiveIntensity = moonIntensity * 0.5 + 0.3;
-        
-        // Adjust enemy light intensity based on time of day, but only if the enemy has a light
-        if (enemy.enemyLight && i % 2 === 0) { // Only update every other frame for performance
-          enemy.enemyLight.intensity = moonIntensity * 2.0 + 1.0; // Increased intensity
+      if (enemy.shaderUniforms) {
+        enemy.shaderUniforms.time.value = time * 0.001;
+        const distanceToPlayer = enemy.position.distanceTo(robotModel.position);
+        if (distanceToPlayer < 10) {
+          enemy.shaderUniforms.glow.value = THREE.MathUtils.mapLinear(
+            distanceToPlayer, 2, 10, 1.0, 0.6
+          );
         }
       }
     }
   }
 
-  // Add a function to move celestial bodies out of view when cycle is disabled
+  // --- FONCTION UPDATE JOUR / NUIT ---
+  function updateDayNightCycle() {
+    if (!cycleEnabled) return;
+    const dayTime = (time % dayLength) / dayLength;
+    const angle = dayTime * Math.PI * 2;
+    const orbitRadius = 40;
+    const heightOffset = 50;
+    sunLight.position.x = Math.cos(angle) * orbitRadius;
+    sunLight.position.y = Math.sin(angle) * orbitRadius / 2 + heightOffset;
+    sunLight.position.z = Math.sin(angle) * (orbitRadius / 2);
+    sunMesh.position.copy(sunLight.position);
+
+    const sunIntensity = Math.max(0, Math.sin(angle));
+    const moonIntensity = Math.max(0, -Math.sin(angle));
+    sunLight.intensity = sunIntensity * 2.5;
+    moonLight.intensity = moonIntensity * 1.2;
+
+    moonLight.position.x = Math.cos(angle + Math.PI) * orbitRadius;
+    moonLight.position.y = Math.sin(angle + Math.PI) * orbitRadius / 2 + heightOffset;
+    moonLight.position.z = Math.sin(angle + Math.PI) * (orbitRadius / 2);
+    moonMesh.position.copy(moonLight.position);
+    moonGlow.position.copy(moonLight.position);
+
+    for (let i = 0; i < nightLights.length; i++) {
+      if (i < nightLights.length / 2) {
+        nightLights[i].intensity = Math.log(moonIntensity * 9 + 1) * 0.8;
+      } else {
+        nightLights[i].intensity = 0;
+      }
+    }
+    moonGlow.intensity = moonIntensity * 1.5;
+  }
+
   function updateCelestialBodiesVisibility() {
     if (!cycleEnabled) {
-      // Position sun behind the player (positive Z) rather than in front (negative Z)
-      // This creates shadows that fall in front of objects (towards negative Z)
-      sunLight.position.set(0, 50, 50); // Changed from (0, 50, -50) - now behind the player
+      sunLight.position.set(0, 50, 50);
       moonLight.position.set(0, -1000, 0);
-      
-      // Hide the celestial bodies
       sunMesh.visible = false;
       moonMesh.visible = false;
       moonGlow.visible = false;
-      
-      // Adjust sun direction to point toward the scene
-      sunLight.target.position.set(0, 0, 0); // Make sure light points toward the scene origin
-      scene.add(sunLight.target); // Must add target to scene to take effect
-      
-      // Set fixed lighting intensity
+      sunLight.target.position.set(0, 0, 0);
+      scene.add(sunLight.target);
       sunLight.intensity = 2.5;
       moonLight.intensity = 0;
-      
-      // Set sky to day color
-      scene.background.copy(daySky);
-      ground.material.color.copy(dayGround);
-      
-      // Make sure shadow camera is positioned properly
-      sunLight.shadow.camera.far = 150; // Increase far plane to reach the entire scene
-      sunLight.updateMatrixWorld(); // Force update of the light's matrix
-      sunLight.shadow.camera.updateProjectionMatrix(); // Update shadow projection
+      sunLight.shadow.camera.far = 150;
+      sunLight.updateMatrixWorld();
+      sunLight.shadow.camera.updateProjectionMatrix();
     } else {
-      // Re-enable visibility when turning cycle back on
       sunMesh.visible = true;
       moonMesh.visible = true;
       moonGlow.visible = true;
-      
-      // If re-enabling, immediately update positions based on current time
       const dayTime = (time % dayLength) / dayLength;
       const angle = dayTime * Math.PI * 2;
-      
-      const orbitRadius = 40; // Increased from 30
-      const heightOffset = 50; // Significantly increased from 15
-      
+      const orbitRadius = 40;
+      const heightOffset = 50;
       sunLight.position.x = Math.cos(angle) * orbitRadius;
       sunLight.position.y = Math.sin(angle) * orbitRadius / 2 + heightOffset;
       sunLight.position.z = Math.sin(angle) * (orbitRadius / 2);
       sunMesh.position.copy(sunLight.position);
-      
       moonLight.position.x = Math.cos(angle + Math.PI) * orbitRadius;
       moonLight.position.y = Math.sin(angle + Math.PI) * orbitRadius / 2 + heightOffset;
       moonLight.position.z = Math.sin(angle + Math.PI) * (orbitRadius / 2);
@@ -1288,10 +1009,8 @@
     }
   }
 
-  // Extract camera positioning code to separate function
   function updateCameraPosition() {
     if (currentView === 'firstPerson') {
-      // First person view logic
       camera.position.copy(robotModel.position);
       camera.position.y += 1.5;
       camera.rotation.set(0, 0, 0);
@@ -1301,120 +1020,64 @@
         robotModel.position.z - 1
       ));
     } else if (currentView === 'closeThirdPerson') {
-      // Close third person view logic
       const idealOffset = new THREE.Vector3(0, 3, 4);
       const idealLookat = new THREE.Vector3(0, 0, -5);
-      
       const offset = idealOffset.clone();
       offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0);
       offset.add(robotModel.position);
-      
       const target = idealLookat.clone();
       target.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0);
       target.add(robotModel.position);
-      
       camera.position.lerp(offset, 0.1);
       camera.lookAt(target);
     }
-    // No need to update for far third person as it's static
   }
 
-  // Add resize handler to maintain performance when window size changes
   window.addEventListener('resize', () => {
-    // Update camera
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    
-    // Update renderer
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
 
-  // Modify the resetGame function
   function resetGame() {
     console.log('Resetting game...');
-
-    stopScoreCounter(); // Stop any existing score counter
-    startScoreCounter(); // Start the score counter
-
-    // Cancel any existing animation frame
+    stopScoreCounter();
+    startScoreCounter();
     if (currentAnimationFrame) {
         cancelAnimationFrame(currentAnimationFrame);
     }
-
-    // Reset movement controls
-    Object.keys(keys).forEach(key => {
-        keys[key].pressed = false;
-    });
-
-    // Clean up ALL enemies, add to pool
+    Object.keys(keys).forEach(key => { keys[key].pressed = false; });
     enemies.forEach(enemy => {
       scene.remove(enemy);
       enemy.visible = false;
       enemyPool.push(enemy);
     });
     enemies.length = 0;
-
-    // Reset spawn rate
     spawnRate = 20;
     frames = 0;
-
-    // Reset camera position based on current view
     if (currentView === 'farThirdPerson') {
         camera.position.copy(cameraPositions.farThirdPerson.position);
         camera.lookAt(cameraPositions.farThirdPerson.target);
         controls.reset();
     }
-
     if (robotModel) {
-        robotModel.position.set(0, 0, 0); // Reset robot position
+        robotModel.position.set(0, 0, 0);
         robotModel.userData.velocityY = 0;
     }
-
-    // Make sure celestial bodies are positioned correctly at start
     updateCelestialBodiesVisibility();
-
-    // Ensure shadows are working properly
-    updateCelestialBodiesVisibility();
-    
-    // If day/night cycle is disabled, make sure shadows are properly configured
-    if (!cycleEnabled) {
-      // Position light behind the scene
-      sunLight.position.set(0, 50, 50);
-      sunLight.target.position.set(0, 0, 0);
-      
-      // Update the shadow camera frustum to match the game area
-      sunLight.shadow.camera.left = -30;
-      sunLight.shadow.camera.right = 30;
-      sunLight.shadow.camera.top = 30;
-      sunLight.shadow.camera.bottom = -10;
-      sunLight.shadow.bias = -0.0005;
-      sunLight.shadow.normalBias = 0.05;
-      sunLight.updateMatrixWorld();
-      sunLight.shadow.camera.updateProjectionMatrix();
-    }
-
-    // Start the game and animation loop
     gameStarted = true;
     console.log('Game started, beginning animation loop');
-    animate(); // Restart the animation loop
+    animate();
   }
 
-  // Remove the existing start menu creation and replace with this
-  let gameStarted = false;
-  cycleEnabled = false; // This is already global
-  let isModelReady = false;
-
-  // Create and show the start menu immediately
   function showStartMenu() {
-      // Remove any existing menu first
       const existingMenu = document.getElementById('startGameMenu');
       if (existingMenu) {
           document.body.removeChild(existingMenu);
       }
-      
       const startMenu = document.createElement('div');
-      startMenu.id = 'startGameMenu'; // Give it a specific ID
+      startMenu.id = 'startGameMenu';
       startMenu.style.cssText = `
           position: fixed;
           top: 0;
@@ -1429,7 +1092,6 @@
           gap: 20px;
           z-index: 2000;
       `;
-
       const menuTitle = document.createElement('h1');
       menuTitle.textContent = 'Game Settings';
       menuTitle.style.cssText = `
@@ -1440,11 +1102,8 @@
       startMenu.appendChild(menuTitle);
 
       let selectedView = 'farThirdPerson';
-      createPOVButtons(startMenu, (view) => {
-          selectedView = view;
-      });
+      createPOVButtons(startMenu, (view) => { selectedView = view; });
 
-      // Create day/night cycle toggle
       const cycleToggle = document.createElement('div');
       cycleToggle.style.cssText = `
           display: flex;
@@ -1452,17 +1111,14 @@
           gap: 10px;
           margin-bottom: 20px;
       `;
-
       const cycleCheckbox = document.createElement('input');
       cycleCheckbox.type = 'checkbox';
       cycleCheckbox.id = 'cycleToggle';
       cycleCheckbox.style.transform = 'scale(1.5)';
-
       const cycleLabel = document.createElement('label');
       cycleLabel.htmlFor = 'cycleToggle';
       cycleLabel.textContent = 'Enable Day/Night Cycle';
       cycleLabel.style.color = 'white';
-
       cycleToggle.appendChild(cycleCheckbox);
       cycleToggle.appendChild(cycleLabel);
       startMenu.appendChild(cycleToggle);
@@ -1479,9 +1135,8 @@
           cursor: pointer;
           transition: background 0.3s;
       `;
-      
       startButton.addEventListener('click', () => {
-          if (gameStarted) return; // Prevent multiple clicks
+          if (gameStarted) return;
           console.log('Start Game button clicked');
           if (!isModelReady) {
               alert('Still loading the 3D model, please wait...');
@@ -1490,13 +1145,9 @@
               startButton.textContent = 'Start Game';
               return;
           }
-          
-          // Disable the button to prevent further clicks
           startButton.disabled = true;
           startButton.style.opacity = '0.5';
           startButton.textContent = 'Starting...';
-          
-          // Create a fallback cube if robotModel is still not available
           if (!robotModel) {
               console.warn('Using fallback cube instead of 3D model');
               robotModel = new Box({
@@ -1509,59 +1160,42 @@
               robotModel.userData = { velocityY: 0, isGrounded: false, canDoubleJump: true };
               scene.add(robotModel);
           }
-          
           currentView = selectedView;
           cycleEnabled = cycleCheckbox.checked;
           cycleButton.innerHTML = cycleEnabled ? 'Pause Day/Night' : 'Resume Day/Night';
           controls.enabled = (currentView === 'farThirdPerson');
-          
-          // Make sure shadows are set up properly before game starts
+
           if (!cycleEnabled) {
-            sunLight.position.set(0, 50, 50); // Changed from (0, 50, -50)
+            sunLight.position.set(0, 50, 50);
             sunLight.target.position.set(0, 0, 0);
             sunLight.shadow.camera.updateProjectionMatrix();
           }
-          
-          // Force gameStarted to true and start the game
           gameStarted = true;
           console.log('Starting game, gameStarted =', gameStarted);
-          
-          // Make sure we remove the menu
           if (document.getElementById('startGameMenu')) {
               document.body.removeChild(document.getElementById('startGameMenu'));
           }
-          
-          // Small delay before starting the game to ensure DOM updates
-          setTimeout(() => {
-              resetGame();
-          }, 50);
+          setTimeout(() => { resetGame(); }, 50);
       });
-
       startButton.addEventListener('mouseover', () => {
           startButton.style.background = '#16a34a';
       });
-
       startButton.addEventListener('mouseout', () => {
           startButton.style.background = '#22c55e';
       });
-
       startMenu.appendChild(startButton);
       document.body.appendChild(startMenu);
   }
 
-  // Call showStartMenu immediately after all initialization
-  showStartMenu();
-
-  // Add a global red ambient light with very low intensity to simulate global illumination
-  const redAmbient = new THREE.AmbientLight(0xff0000, 0.02); // Réduit de 0.03 à 0.02
+  // LUMIERE AMBIANTE ROUGE (faible) GLOBALE
+  const redAmbient = new THREE.AmbientLight(0xff0000, 0.02);
   scene.add(redAmbient);
 
-  // Add these shader definitions at the top level after imports
+  // SHADERS
   const redGlowVertexShader = `
     varying vec2 vUv;
     varying vec3 vPosition;
     varying vec3 vNormal;
-    
     void main() {
       vUv = uv;
       vPosition = position;
@@ -1569,143 +1203,68 @@
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }
   `;
-
   const redGlowFragmentShader = `
     uniform float time;
     uniform float glow;
     varying vec2 vUv;
     varying vec3 vPosition;
     varying vec3 vNormal;
-
     void main() {
-      // Base color - translucent red
       vec4 color = vec4(1.0, 0.0, 0.0, 0.7);
-      
-      // Add pulsing glow effect based on time
       float pulse = 0.5 + 0.5 * sin(time * 2.0);
-      
-      // Fresnel effect - more glow at grazing angles
       float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-      
-      // Add glow and fresnel to the edges
       color.rgb += vec3(0.7, 0.0, 0.0) * fresnel * glow * pulse;
-      
       gl_FragColor = color;
     }
   `;
 
-  // Modify the animate function to update shader uniforms
-  // In the animate function, after updating enemies
-  for (let i = 0; i < enemies.length; i++) {
-    const enemy = enemies[i];
-    
-    // Update shader uniforms if enemy has them
-    if (enemy.shaderUniforms) {
-      enemy.shaderUniforms.time.value = time * 0.001; // Convert to seconds
-      
-      // Increase glow when closer to player for dramatic effect
-      const distanceToPlayer = enemy.position.distanceTo(robotModel.position);
-      if (distanceToPlayer < 10) {
-        enemy.shaderUniforms.glow.value = THREE.MathUtils.mapLinear(
-          distanceToPlayer, 2, 10, 1.0, 0.6
-        );
-      }
-    }
-  }
-
-  // Add normal map to walls
+  // TEXTURES SOL & MURS
   const textureLoader = new THREE.TextureLoader();
-  
-  // Load floor bump map
   textureLoader.load('./assets/textures/floor_bump.jpg', function(floorTexture) {
-    // Set appropriate texture parameters for the floor
     floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
-    floorTexture.repeat.set(4, 20); // Repeat texture across the floor width and length
-    
-    // Convert ground material to MeshStandardMaterial if it's not already
+    floorTexture.repeat.set(4, 20);
     if (!(ground.material instanceof THREE.MeshStandardMaterial)) {
       const oldColor = ground.material.color;
-      ground.material = new THREE.MeshStandardMaterial({ 
+      ground.material = new THREE.MeshStandardMaterial({
         color: oldColor,
         roughness: 0.4,
         metalness: 0.2
       });
     }
-    
-    // Apply normal map to ground
     ground.material.normalMap = floorTexture;
-    ground.material.normalScale.set(0.8, 0.8); // Slightly less intense than walls
-    
+    ground.material.normalScale.set(0.8, 0.8);
     console.log("Normal map applied to floor");
   });
-  
-  // Load wall normal maps
-  const normalMap = textureLoader.load('./assets/textures/bump.jpg', function(texture) {
-    // Set default texture parameters
+  textureLoader.load('./assets/textures/bump.jpg', function(texture) {
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    
-    // Apply normal map to all visual walls with different repeat settings based on orientation
     Object.entries(walls).forEach(([direction, { visualWall }]) => {
-      // Clone the texture for each wall to have independent repeat settings
       const wallTexture = texture.clone();
-      
-      // Set different repeat settings based on wall orientation
       if (direction === 'left' || direction === 'right') {
-        // Side walls need repeat along Z-axis (depth) instead of X-axis (width)
-        wallTexture.repeat.set(1, 20); // 1x horizontal, 20x vertical for side walls
-        // Rotate the texture by 90 degrees for side walls
+        wallTexture.repeat.set(1, 20);
         wallTexture.rotation = Math.PI / 2;
-        wallTexture.center.set(0.5, 0.5); // Set rotation center
+        wallTexture.center.set(0.5, 0.5);
       } else {
-        // Front and back walls (keep original horizontal repeat)
-        wallTexture.repeat.set(5, 1); // 5x horizontal for front/back walls
+        wallTexture.repeat.set(5, 1);
       }
-      
-      // Convert standard material to MeshStandardMaterial if it isn't one already
       if (!(visualWall.material instanceof THREE.MeshStandardMaterial)) {
         const oldColor = visualWall.material.color;
-        visualWall.material = new THREE.MeshStandardMaterial({ 
+        visualWall.material = new THREE.MeshStandardMaterial({
           color: oldColor,
           roughness: 0.7,
           metalness: 0.3
         });
       }
-      
-      // Apply adjusted normal map
       visualWall.material.normalMap = wallTexture;
-      visualWall.material.normalScale.set(1.5, 1.5); // Increase normal map intensity
-      
-      // Enable proper normal map rendering
+      visualWall.material.normalScale.set(1.5, 1.5);
       visualWall.castShadow = true;
       visualWall.receiveShadow = true;
     });
-    
-    console.log("Normal maps applied to walls with orientation-specific settings");
+    console.log("Normal maps applied to walls");
   });
-  
-  // Modify the animate function to update shader uniforms
-  // In the animate function, after updating enemies
-  for (let i = 0; i < enemies.length; i++) {
-    const enemy = enemies[i];
-    
-    // Update shader uniforms if enemy has them
-    if (enemy.shaderUniforms) {
-      enemy.shaderUniforms.time.value = time * 0.001; // Convert to seconds
-      
-      // Increase glow when closer to player for dramatic effect
-      const distanceToPlayer = enemy.position.distanceTo(robotModel.position);
-      if (distanceToPlayer < 10) {
-        enemy.shaderUniforms.glow.value = THREE.MathUtils.mapLinear(
-          distanceToPlayer, 2, 10, 1.0, 0.6
-        );
-      }
-    }
-  }
 
-  let score = 0; // Initialize score
-  let scoreInterval = null; // Interval for updating score
-
-  // Create a score display element
+  // SCORE
+  let score = 0;
+  let scoreInterval = null;
   const scoreDisplay = document.createElement('div');
   scoreDisplay.style.cssText = `
     position: fixed;
@@ -1722,19 +1281,19 @@
   scoreDisplay.textContent = `Score: 0`;
   document.body.appendChild(scoreDisplay);
 
-  // Function to start the score counter
   function startScoreCounter() {
-    score = 0; // Reset score
-    if (scoreInterval) clearInterval(scoreInterval); // Clear any existing interval
+    score = 0;
+    if (scoreInterval) clearInterval(scoreInterval);
     scoreInterval = setInterval(() => {
-      score += 1; // Increment score by 1 every 0.1 seconds
-      scoreDisplay.textContent = `Score: ${score}`; // Update the score display
-    }, 100); // 100ms = 0.1 seconds
+      score += 1;
+      scoreDisplay.textContent = `Score: ${score}`;
+    }, 100);
   }
 
-  // Function to stop the score counter
   function stopScoreCounter() {
     if (scoreInterval) clearInterval(scoreInterval);
   }
 
 </script>
+</body>
+</html>
